@@ -3,10 +3,9 @@ import sys
 import asyncio
 import logging
 from dotenv import load_dotenv
-from psycopg2.extensions import connection
 from config.urls import INDICATORS
 from database.db import Database
-from database.db_utils import create_tables, insert_data, delete_old_data, OldDataNotFoundError
+from database.db_utils import create_tables, insert_data, delete_old_data
 from scripts.economy_data import get_all_indicators_data
 from scripts.market_news import get_news_data
 
@@ -49,6 +48,7 @@ async def tasks():
             password=DB_PASSWORD,
             port=DB_PORT
         )
+            
         conn = db.get_connection()
         logger.info("Database connection successful.")
 
@@ -63,47 +63,44 @@ async def tasks():
             logger.info("Got all economy indicators data successfully.")
 
             news_data = await task2
+            print(len(news_data))
             logger.info("Got all news data successfully.")
 
-            #insert economy data
-            if economy_data:
-                try:
-                    sql_query = 'INSERT INTO economy_data (ticker_name, dates, values) VALUES (%s, %s, %s)'
-                    insert_data(economy_data, conn, sql_query)
-                    logger.info("Inserted new economy indicators data.")
+            # insert economy data
+            economy_sql_query = 'INSERT INTO economy_data (ticker_name, dates, values) VALUES (%s, %s, %s)'
+            insert_data(economy_data, conn, economy_sql_query)
+            logger.info("Inserted new economy indicators data.")
 
-                    # delete old economy data
-                    delete_old_data(conn, table_name='economy_data', date_column='date_created')
-                    logger.info("Deleted old economy indicators data.")
-                except Exception as error:
-                    logger.error(error)
+            # delete old economy data
+            delete_old_data(conn, table_name='economy_data', date_column='date_created')
+            logger.info("Deleted old economy indicators data.")
 
             # insert news data
-            if news_data:
-                try:
-                    sql_query = '''
-                        INSERT INTO market_news (author, title, description, url, source, image, category, language, country)
-                        VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    '''
-                    insert_data(news_data, conn, sql_query)
-                    logger.info("Inserted new news data.")
+            news_sql_query = '''
+                INSERT INTO market_news (title, description, url, source, image, category, language, country)
+                VALUES(%s, %s, %s, %s, %s, %s, %s, %s)
+            '''
+            insert_data(news_data, conn, news_sql_query)
+            logger.info("Inserted new news data.")
 
-                    # delete old news data
-                    delete_old_data(conn, table_name='market_news', date_column='date_created')
-                    logger.info("Deleted old news data.")
-                except Exception as error:
-                    logger.error(error)  
-                    
+            # delete old news data
+            delete_old_data(conn, table_name='market_news', date_column='date_created')
+            logger.info("Deleted old news data.")
+
         except Exception as error:
-            logger.error(error)
-        finally:
-            conn.commit()
-            db.disconnect()
-            logger.info("Diconnected database.")
+            logger.error(f"Error retrieving data: {error}")
 
     except Exception as error:
-        logger.error(error)
+        logger.error(f"Error connecting to database: {error}")
+
+    finally:
+        conn.commit()
+        db.disconnect()
+        logger.info("Disconnected database.")
 
 
 def main():
     asyncio.run(tasks())
+
+if __name__ == '__main__':
+    main()

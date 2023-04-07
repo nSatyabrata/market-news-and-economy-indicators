@@ -2,7 +2,6 @@ import aiohttp
 import asyncio
 from scripts.utils import get_response_data
 from datetime import datetime
-from database.db_utils import insert_data, delete_old_data
 
 
 async def get_all_indicators_data(indicators: dict) -> tuple:

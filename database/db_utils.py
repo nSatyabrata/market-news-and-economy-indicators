@@ -4,9 +4,17 @@ from psycopg2.extras import execute_batch
 from psycopg2.sql import SQL, Identifier
 from database.db import DatabaseOperationError
 
+# add custom data already exits excpetion
 
 class OldDataNotFoundError(Exception):
     '''Custom exception if there are no old data.'''
+
+    def __init__(self, message) -> None:
+        self.message = message
+        super().__init__(self.message)
+
+class LatestDataNotFoundError(Exception):
+    '''Custom exception if latest data is not available.'''
 
     def __init__(self, message) -> None:
         self.message = message
@@ -30,7 +38,6 @@ def create_tables(conn: connection) -> None:
     market_news_table = '''
         CREATE TABLE IF NOT EXISTS market_news (
             id SERIAL,
-            author VARCHAR(50),
             title TEXT,
             description TEXT,
             url TEXT,
@@ -49,20 +56,17 @@ def create_tables(conn: connection) -> None:
             cursor.execute(market_news_table)
     except Exception as error:
         raise DatabaseOperationError(f"Couldn't create tables due to {error=}")
-    
+
 
 def insert_data(data: tuple, conn: connection, sql_query: str) -> None:
     """Inserts data into table in database."""
 
-    if data:
-        try:
-            with conn.cursor() as cursor:
-                execute_batch(cursor, sql_query, data, page_size=1000)
-        except Exception as error:
-            raise DatabaseOperationError(f"Couldn't insert data due to {error=}.")
-    else:
-        raise DatabaseOperationError("Data is not available.")
-    
+    try:
+        with conn.cursor() as cursor:
+            execute_batch(cursor, sql_query, data, page_size=1000)
+    except Exception as error:
+        raise DatabaseOperationError(f"Couldn't insert data due to {error=}.")
+
 
 def delete_old_data(conn: connection, table_name: str, date_column: str) -> None:
     """Delete old data after inserting new data."""
@@ -87,5 +91,7 @@ def delete_old_data(conn: connection, table_name: str, date_column: str) -> None
                     ),
                     (max_date,)
                 )
+            else:
+                raise LatestDataNotFoundError("Couldn't find latest data.")
     except Exception as error:
         raise DatabaseOperationError(f"Couldn't delete old data due to {error=}")

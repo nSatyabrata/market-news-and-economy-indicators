@@ -1,11 +1,14 @@
 import aiohttp
 import asyncio
 from scripts.utils import get_response_data
+from config.urls import INDICATORS
 from datetime import datetime
 
 
-async def get_all_indicators_data(indicators: dict) -> tuple:
-    """Get all the data from all available urls asynchronously."""
+async def get_all_indicators_data() -> tuple:
+    """Get economy indicator data for indicators."""
+
+    indicators = INDICATORS
 
     async with aiohttp.ClientSession() as session:
         all_records = []

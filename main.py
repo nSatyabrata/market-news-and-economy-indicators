@@ -3,7 +3,6 @@ import sys
 import asyncio
 import logging
 from dotenv import load_dotenv
-from config.urls import INDICATORS
 from database.db import Database
 from database.db_utils import create_tables, insert_data, delete_old_data
 from scripts.economy_data import get_all_indicators_data
@@ -56,7 +55,7 @@ async def tasks():
         create_tables(conn)
 
         try:
-            task1 = asyncio.create_task(get_all_indicators_data(indicators=INDICATORS))
+            task1 = asyncio.create_task(get_all_indicators_data())
             task2 = asyncio.create_task(get_news_data())
 
             economy_data = await task1

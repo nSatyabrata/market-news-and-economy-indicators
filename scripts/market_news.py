@@ -9,16 +9,8 @@ load_dotenv()
 API_KEY = os.environ['API_KEY']
 
 
-class S3UploadError(Exception):
-    '''Custom exception for s3 data upload'''
-
-    def __init__(self, message) -> None:
-        self.message = message
-        super().__init__(self.message)
-
-# change this methodology similar to economy data.
 async def get_news_data() -> tuple:
-    """Return news data."""
+    """Get news data for all categories."""
 
     categories = ['technology', 'science', 'business', 'health']
     

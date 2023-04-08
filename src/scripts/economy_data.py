@@ -1,6 +1,6 @@
 import aiohttp
 import asyncio
-from scripts.utils import get_response_data
+from src.scripts.utils import get_response_data
 from config.urls import INDICATORS
 from datetime import datetime
 

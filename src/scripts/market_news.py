@@ -1,7 +1,7 @@
 import os
 import aiohttp
 import asyncio
-from scripts.utils import get_response_data
+from src.scripts.utils import get_response_data
 from dotenv import load_dotenv
 
 

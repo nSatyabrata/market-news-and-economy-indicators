@@ -3,10 +3,10 @@ import sys
 import asyncio
 import logging
 from dotenv import load_dotenv
-from database.db import Database
-from database.db_utils import create_tables, insert_data, delete_old_data
-from scripts.economy_data import get_all_indicators_data
-from scripts.market_news import get_news_data
+from src.database.db import Database
+from src.database.db_utils import create_tables, insert_data, delete_old_data
+from src.scripts.economy_data import get_all_indicators_data
+from src.scripts.market_news import get_news_data
 
 
 load_dotenv()
@@ -62,7 +62,6 @@ async def tasks():
             logger.info("Got all economy indicators data successfully.")
 
             news_data = await task2
-            print(len(news_data))
             logger.info("Got all news data successfully.")
 
             # insert economy data
@@ -87,7 +86,7 @@ async def tasks():
             logger.info("Deleted old news data.")
 
         except Exception as error:
-            logger.error(f"Error retrieving data: {error}")
+            logger.error(error)
 
     except Exception as error:
         logger.error(f"Error connecting to database: {error}")

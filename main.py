@@ -2,9 +2,10 @@ import os
 import sys
 import asyncio
 import logging
+from datetime import datetime
 from dotenv import load_dotenv
 from src.database.db import Database
-from src.database.db_utils import create_tables, insert_data, delete_old_data
+from src.database.db_utils import create_tables, insert_data, delete_old_data, get_latest_date_created
 from src.scripts.economy_data import get_all_indicators_data
 from src.scripts.market_news import get_news_data
 
@@ -64,26 +65,38 @@ async def tasks():
             news_data = await task2
             logger.info("Got all news data successfully.")
 
-            # insert economy data
-            economy_sql_query = 'INSERT INTO economy_data (ticker_name, dates, values) VALUES (%s, %s, %s)'
-            insert_data(economy_data, conn, economy_sql_query)
-            logger.info("Inserted new economy indicators data.")
+            today = datetime.today().date()
 
-            # delete old economy data
-            delete_old_data(conn, table_name='economy_data', date_column='date_created')
-            logger.info("Deleted old economy indicators data.")
+            # get latest date available in economy data table then check and insert new data
+            latest_date_economy_table = get_latest_date_created(conn=conn, table_name='economy_data', date_column='date_created')
+            if latest_date_economy_table != today:
+                # insert economy data
+                economy_sql_query = 'INSERT INTO economy_data (ticker_name, dates, values, date_created) VALUES (%s, %s, %s ,%s)'
+                insert_data(economy_data, conn, economy_sql_query)
+                logger.info("Inserted new economy indicators data.")
 
-            # insert news data
-            news_sql_query = '''
-                INSERT INTO market_news (title, description, url, source, image, category, language, country)
-                VALUES(%s, %s, %s, %s, %s, %s, %s, %s)
-            '''
-            insert_data(news_data, conn, news_sql_query)
-            logger.info("Inserted new news data.")
+                # delete old economy data
+                delete_old_data(conn, table_name='economy_data', date_column='date_created')
+                logger.info("Deleted old economy indicators data.")
+            else:
+                logger.warning("Latest economy data already exists.")
+            
+            # get latest date available in market data table then check and insert new data
+            latest_date_news_table = get_latest_date_created(conn=conn, table_name='market_news', date_column='date_created')
+            if latest_date_news_table != today:
+                # insert news data
+                news_sql_query = '''
+                    INSERT INTO market_news (title, description, url, source, image, category, language, country, date_created)
+                    VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                '''
+                insert_data(news_data, conn, news_sql_query)
+                logger.info("Inserted new news data.")
 
-            # delete old news data
-            delete_old_data(conn, table_name='market_news', date_column='date_created')
-            logger.info("Deleted old news data.")
+                # delete old news data
+                delete_old_data(conn, table_name='market_news', date_column='date_created')
+                logger.info("Deleted old news data.")
+            else:
+                logger.warning("Latest news data already exists.")
 
         except Exception as error:
             logger.error(error)

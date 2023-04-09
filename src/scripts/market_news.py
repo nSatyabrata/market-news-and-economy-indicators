@@ -1,6 +1,7 @@
 import os
 import aiohttp
 import asyncio
+from datetime import datetime
 from src.scripts.utils import get_response_data
 from dotenv import load_dotenv
 
@@ -25,7 +26,7 @@ async def get_news_data() -> tuple:
 
         try:
             responses = await asyncio.gather(*[get_response_data(session, news_url) for news_url in news_urls], return_exceptions=True)
-
+            today = datetime.today().date()
             error_count = 0
             for response in responses:
                 if isinstance(response, ConnectionError) == False:
@@ -38,7 +39,8 @@ async def get_news_data() -> tuple:
                         n['image'],
                         n['category'],
                         n['language'],
-                        n['country'],)
+                        n['country'],
+                        today)
                         for n in data
                     ]
                     all_news += news

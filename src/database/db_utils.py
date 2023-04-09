@@ -21,7 +21,7 @@ def create_tables(conn: connection) -> None:
             ticker_name VARCHAR(40) NOT NULL,
             dates date NOT NULL,
             values FLOAT,
-            date_created DATE NOT NULL DEFAULT CURRENT_DATE,
+            date_created DATE NOT NULL,
             PRIMARY KEY (ticker_name, dates, date_created)
         );
     '''
@@ -37,7 +37,7 @@ def create_tables(conn: connection) -> None:
             category VARCHAR(20),
             language VARCHAR(10),
             country VARCHAR(5),
-            date_created DATE NOT NULL DEFAULT CURRENT_DATE,
+            date_created DATE NOT NULL,
             PRIMARY KEY (id)
         );
     '''

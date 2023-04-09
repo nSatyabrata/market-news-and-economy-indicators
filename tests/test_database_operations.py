@@ -39,56 +39,74 @@ def db_connection():
             ticker_name VARCHAR(40) NOT NULL,
             dates DATE NOT NULL,
             values FLOAT,
-            date_created DATE NOT NULL DEFAULT CURRENT_DATE,
+            date_created DATE NOT NULL,
             PRIMARY KEY (ticker_name, dates, date_created)
         );
     '''
 
-    test_market_news_table = '''
-        CREATE TABLE IF NOT EXISTS test_market_news (
-            id SERIAL,
-            title TEXT,
-            description TEXT,
-            url TEXT,
-            source TEXT,
-            image TEXT,
-            category VARCHAR(20),
-            language VARCHAR(10),
-            country VARCHAR(5),
-            date_created DATE NOT NULL DEFAULT CURRENT_DATE,
-            PRIMARY KEY (id)
-        );
-    '''
-
     cur.execute(test_economy_data_table)
-    cur.execute(test_market_news_table)
     conn.commit()
 
     yield conn
 
     cur.execute("DROP TABLE test_economy_data")
-    cur.execute("DROP TABLE test_market_news")
     conn.commit()
     cur.close()
     conn.close()
 
 
-def test_insert_data_economy_data(db_connection):
-    """Test the data insert operation in test economy table."""
+def test_insert_data(db_connection):
+    """Test the data insert operation."""
 
+    today = datetime.today().date()
     test_data = (
-        ('test_ticker_1', datetime(year=2023, month=4, day=6), 7),
-        ('test_ticker_2', datetime(year=2023, month=4, day=6), 3.8),
-        ('test_ticker_3', datetime(year=2023, month=4, day=6), 2889),
+        ('test_ticker_1', datetime(year=2023, month=4, day=6), 7, today),
+        ('test_ticker_2', datetime(year=2023, month=4, day=6), 3.8, today),
+        ('test_ticker_3', datetime(year=2023, month=4, day=6), 2889, today),
     )
 
-    economy_sql_query = 'INSERT INTO test_economy_data (ticker_name, dates, values) VALUES (%s, %s, %s)'
-    insert_data(test_data, db_connection, economy_sql_query)
-    db_connection.commit()
+    economy_sql_query = 'INSERT INTO test_economy_data (ticker_name, dates, values, date_created) VALUES (%s, %s, %s, %s)'
+    insert_data(data=test_data, conn=db_connection, sql_query=economy_sql_query)
 
     cur = db_connection.cursor()
     cur.execute("SELECT COUNt(*) FROM test_economy_data")
-    num_of_records = cur.fetchone()[0]
+    records_count = cur.fetchone()[0]
 
-    assert num_of_records == len(test_data)
+    assert records_count == len(test_data)
+
+    cur.execute("DELETE FROM test_economy_data")
+    db_connection.commit()
+    cur.close()
+
+
+def test_delete_old_data(db_connection):
+    """Test the old data operation."""
+
+    test_old_data = [
+        ('test_ticker_1', datetime(year=2023, month=4, day=6), 7, datetime(year=2023, month=4, day=7)),
+        ('test_ticker_2', datetime(year=2023, month=4, day=6), 3.8, datetime(year=2023, month=4, day=7)),
+        ('test_ticker_3', datetime(year=2023, month=4, day=6), 2889, datetime(year=2023, month=4, day=7))
+    ]
+    today = datetime.today().date()
+    test_new_data = [
+        ('test_ticker_1', datetime(year=2023, month=4, day=6), 7, today),
+        ('test_ticker_2', datetime(year=2023, month=4, day=6), 3.8, today),
+        ('test_ticker_3', datetime(year=2023, month=4, day=6), 2889, today),
+        ('test_ticker_4', datetime(year=2023, month=4, day=6), 43, today)
+    ]
+    test_data = test_old_data + test_new_data
+    insert_query = 'INSERT INTO test_economy_data (ticker_name, dates, values, date_created) VALUES (%s, %s, %s, %s)'
+
+    cur = db_connection.cursor()
+    cur.executemany(insert_query, test_data)
+
+    delete_old_data(conn=db_connection, table_name='test_economy_data', date_column='date_created')
+
+    cur.execute("SELECT COUNT(*) FROM test_economy_data")
+    new_records_count = cur.fetchone()[0]
+
+    assert new_records_count == len(test_new_data)
+
+    cur.execute("DELETE FROM test_economy_data")
+    db_connection.commit()
     cur.close()

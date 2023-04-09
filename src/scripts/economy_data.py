@@ -15,11 +15,12 @@ async def get_all_indicators_data() -> tuple:
 
         try:
             responses = await asyncio.gather(*[get_response_data(session, indicator['url']) for indicator in indicators], return_exceptions=True)
+            today = datetime.today().date()
 
             error_count = 0
             for response in responses:
                 if isinstance(response, ConnectionError) == False:
-                    records = [( response['ticker'], datetime.strptime(record[0],'%Y-%m-%d').date() , record[1]) 
+                    records = [( response['ticker'], datetime.strptime(record[0],'%Y-%m-%d').date() , record[1], today) 
                                         for record in zip(response['data']['dates'], response['data']['values'])]
                     all_records += records
                 else:

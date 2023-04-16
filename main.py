@@ -20,7 +20,7 @@ DB_PASSWORD = os.environ['DB_PASSWORD']
 
 
 # logging setup
-logger = logging.getLogger("News-Logger")
+logger = logging.getLogger("NewsAndInfo")
 logger.setLevel(logging.INFO)
 
 # checking if logger is already available(AWS lambda)
@@ -110,8 +110,8 @@ async def tasks():
         logger.info("Disconnected database.")
 
 
-def main():
+def main(event, context):
     asyncio.run(tasks())
 
 if __name__ == '__main__':
-    main()
+    main(None, None)

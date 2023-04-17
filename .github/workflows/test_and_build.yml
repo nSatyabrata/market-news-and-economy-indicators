@@ -83,4 +83,5 @@ jobs:
         run: |
           aws lambda update-function-code \
           --function-name $LAMBDA_NAME \
-          --image-uri $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          --image-uri $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+          --quiet

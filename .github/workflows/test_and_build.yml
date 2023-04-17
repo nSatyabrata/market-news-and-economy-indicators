@@ -46,6 +46,10 @@ jobs:
 
     needs: test
 
+    permissions:
+      id-token: write 
+      contents: read
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3

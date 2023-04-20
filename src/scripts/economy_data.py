@@ -6,7 +6,12 @@ from datetime import datetime
 
 
 async def get_all_indicators_data() -> tuple:
-    """Get economy indicator data for indicators."""
+    """
+    Asynchronously fetches data from the URLs associates with each indicator and returns a tuple of all fetched records.
+
+    Returns:
+        A tuple with all the records from URLs.
+    """
 
     indicators = INDICATORS
 
@@ -14,14 +19,15 @@ async def get_all_indicators_data() -> tuple:
         all_records = []
 
         try:
-            responses = await asyncio.gather(*[get_response_data(session, indicator['url']) for indicator in indicators], return_exceptions=True)
+            responses = await asyncio.gather(
+                *[get_response_data(session, indicator['url']) for indicator in indicators], return_exceptions=True)
             today = datetime.today().date()
 
             error_count = 0
             for response in responses:
-                if isinstance(response, ConnectionError) == False:
-                    records = [( response['ticker'], datetime.strptime(record[0],'%Y-%m-%d').date() , record[1], today) 
-                                        for record in zip(response['data']['dates'], response['data']['values'])]
+                if not isinstance(response, ConnectionError):
+                    records = [(response['ticker'], datetime.strptime(record[0], '%Y-%m-%d').date(), record[1], today)
+                               for record in zip(response['data']['dates'], response['data']['values'])]
                     all_records += records
                 else:
                     error_count += 1

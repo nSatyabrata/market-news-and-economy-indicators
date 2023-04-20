@@ -9,7 +9,7 @@ load_dotenv()
 
 DB_HOST = os.environ['DB_HOST']
 DB_NAME = os.environ['DB_NAME']
-DB_PORT = os.environ['DB_PORT']
+DB_PORT = int(os.environ['DB_PORT'])
 DB_USER = os.environ['DB_USER']
 DB_PASSWORD = os.environ['DB_PASSWORD']
 
@@ -28,7 +28,7 @@ def db_connection():
             database=DB_NAME,
             user=DB_USER,
             password=DB_PASSWORD,
-            port=DB_PORT
+            port=DB_PORT,
         )
             
     conn = db.get_connection()
@@ -65,7 +65,9 @@ def test_insert_data(db_connection):
         ('test_ticker_3', datetime(year=2023, month=4, day=6), 2889, today),
     )
 
-    economy_sql_query = 'INSERT INTO test_economy_data (ticker_name, dates, values, date_created) VALUES (%s, %s, %s, %s)'
+    economy_sql_query = ('INSERT INTO test_economy_data '
+                         '(ticker_name, dates, values, date_created) '
+                         'VALUES (%s, %s, %s, %s)')
     insert_data(data=test_data, conn=db_connection, sql_query=economy_sql_query)
 
     cur = db_connection.cursor()
@@ -87,7 +89,7 @@ def test_delete_old_data(db_connection):
         ('test_ticker_2', datetime(year=2023, month=4, day=6), 3.8, datetime(year=2023, month=4, day=7)),
         ('test_ticker_3', datetime(year=2023, month=4, day=6), 2889, datetime(year=2023, month=4, day=7))
     ]
-    today = datetime.today().date()
+    today = datetime.today()
     test_new_data = [
         ('test_ticker_1', datetime(year=2023, month=4, day=6), 7, today),
         ('test_ticker_2', datetime(year=2023, month=4, day=6), 3.8, today),

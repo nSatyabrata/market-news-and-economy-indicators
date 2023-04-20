@@ -14,7 +14,7 @@ load_dotenv()
 
 DB_HOST = os.environ['DB_HOST']
 DB_NAME = os.environ['DB_NAME']
-DB_PORT = os.environ['DB_PORT']
+DB_PORT = int(os.environ['DB_PORT'])
 DB_USER = os.environ['DB_USER']
 DB_PASSWORD = os.environ['DB_PASSWORD']
 
@@ -46,7 +46,7 @@ async def tasks():
             database=DB_NAME,
             user=DB_USER,
             password=DB_PASSWORD,
-            port=DB_PORT
+            port=DB_PORT,
         )
             
         conn = db.get_connection()
@@ -68,10 +68,14 @@ async def tasks():
             today = datetime.today().date()
 
             # get latest date available in economy data table then check and insert new data
-            latest_date_economy_table = get_latest_date_created(conn=conn, table_name='economy_data', date_column='date_created')
+            latest_date_economy_table = get_latest_date_created(conn=conn, 
+                                                                table_name='economy_data', 
+                                                                date_column='date_created')
             if latest_date_economy_table != today:
                 # insert economy data
-                economy_sql_query = 'INSERT INTO economy_data (ticker_name, dates, values, date_created) VALUES (%s, %s, %s ,%s)'
+                economy_sql_query = ('INSERT INTO economy_data '
+                                     '(ticker_name, dates, values, date_created) '
+                                     'VALUES (%s, %s, %s ,%s)')
                 insert_data(economy_data, conn, economy_sql_query)
                 logger.info("Inserted new economy indicators data.")
 
@@ -82,13 +86,14 @@ async def tasks():
                 logger.warning("Latest economy data already exists.")
             
             # get latest date available in market data table then check and insert new data
-            latest_date_news_table = get_latest_date_created(conn=conn, table_name='market_news', date_column='date_created')
+            latest_date_news_table = get_latest_date_created(conn=conn,
+                                                             table_name='market_news', 
+                                                             date_column='date_created')
             if latest_date_news_table != today:
                 # insert news data
-                news_sql_query = '''
-                    INSERT INTO market_news (title, description, url, source, image, category, language, country, date_created)
-                    VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                '''
+                news_sql_query = ('INSERT INTO market_news '
+                                  '(title, description, url, source, image, category, language, country, date_created) '
+                                  'VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)')
                 insert_data(news_data, conn, news_sql_query)
                 logger.info("Inserted new news data.")
 
@@ -101,17 +106,18 @@ async def tasks():
         except Exception as error:
             logger.error(error)
 
+        finally:
+            conn.commit()
+            db.disconnect()
+            logger.info("Disconnected database.")
+
     except Exception as error:
         logger.error(f"Error connecting to database: {error}")
-
-    finally:
-        conn.commit()
-        db.disconnect()
-        logger.info("Disconnected database.")
 
 
 def main(event, context):
     asyncio.run(tasks())
+
 
 if __name__ == '__main__':
     main(None, None)

@@ -3,7 +3,7 @@ from psycopg2.extensions import connection
 
 
 class DatabaseConnectionError(Exception):
-    '''Custom exception for database connection error.'''
+    """Custom exception for database connection error."""
 
     def __init__(self, message) -> None:
         self.message = message
@@ -11,7 +11,7 @@ class DatabaseConnectionError(Exception):
 
 
 class DatabaseOperationError(Exception):
-    '''Custom exception for database operation error.'''
+    """Custom exception for database operation error."""
 
     def __init__(self, message) -> None:
         self.message = message
@@ -27,8 +27,7 @@ class Database:
         disconnect(): Disconnects from the database.
     """
 
-
-    def __init__(self, host: str, database: str, user: str, password: str, port: int=5432) -> None:
+    def __init__(self, host: str, database: str, user: str, password: str, port: int = 5432) -> None:
         try:
             self._connection = psycopg2.connect(
                 host=host,
@@ -40,14 +39,12 @@ class Database:
         except Exception as error:
             raise DatabaseConnectionError(f"Unable to connect to database.{error=}")
 
-
     def get_connection(self) -> connection:
         """Connects to the database."""
         if self._connection:
             return self._connection
         else:
             raise DatabaseOperationError(f"Connection is closed. Create a new connection.")
-
 
     def disconnect(self):
         """Disconnects from the database."""

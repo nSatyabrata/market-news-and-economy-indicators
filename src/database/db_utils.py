@@ -6,7 +6,7 @@ from src.database.db import DatabaseOperationError
 
 
 class LatestDataNotFoundError(Exception):
-    '''Custom exception if latest data is not available.'''
+    """Custom exception if latest data is not available."""
 
     def __init__(self, message) -> None:
         self.message = message
@@ -14,7 +14,10 @@ class LatestDataNotFoundError(Exception):
 
 
 def create_tables(conn: connection) -> None:
-    """Creates economy_data, market_news tables in database."""
+    """
+    Creates economy_data, market_news tables in database.
+
+    """
 
     economy_data_table = '''
         CREATE TABLE IF NOT EXISTS economy_data (
@@ -50,17 +53,17 @@ def create_tables(conn: connection) -> None:
 
 
 def get_latest_date_created(conn: connection, table_name: str, date_column: str) -> datetime.date:
-    '''Returns latest date created from given table.'''
+    """Returns latest date created from given table."""
 
     with conn.cursor() as cursor:
-            cursor.execute(
-                SQL("SELECT MAX({}) FROM {}").format(
-                    Identifier(date_column),
-                    Identifier(table_name)
-                )
+        cursor.execute(
+            SQL("SELECT MAX({}) FROM {}").format(
+                Identifier(date_column),
+                Identifier(table_name)
             )
-            max_date = cursor.fetchone()[0]
-    
+        )
+        max_date = cursor.fetchone()[0]
+
     return max_date
 
 
@@ -81,7 +84,7 @@ def delete_old_data(conn: connection, table_name: str, date_column: str) -> None
         with conn.cursor() as cursor:
             today = datetime.today().date()
             max_date = get_latest_date_created(conn, table_name, date_column)
-            
+
             if max_date == today:
                 cursor.execute(
                     SQL("DELETE FROM {} where {} <> %s").format(
